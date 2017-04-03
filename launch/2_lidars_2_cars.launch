@@ -30,21 +30,23 @@ TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
   <arg name="robot_name_2" default="catvehicle_static"/>
 
   <arg name="paused" default="false"/>
-  <arg name="gui" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
+
   <arg name="rviz_file" default="$(find overtaking_maneuver)/rviz/overtaking.rviz"/>
   <arg name="front_laser_points" default="true"/>
   <arg name="front_top_lidar_points" default="true"/>
   <arg name="velodyne_points" default="false"/>
   <arg name="camera_right" default="false"/>
   <arg name="camera_left" default="false"/>
+  <arg name="init_pose" value="-x -20 -y 1 -z 0"/>
+  <arg name="config_file" default="catvehicle_control.yaml"/>
 
-  <arg name="use_sim_time" default="true"/>
-  <param name="use_sim_time" value="true"/>
-  <rosparam param="/use_sim_time">true</rosparam>
+  <rosparam param="/use_sim_time">$(arg use_sim_time)</rosparam>
 
-  <include file="$(find catvehicle)/launch/small_city.launch">
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find catvehicle)/worlds/small_city.world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
@@ -58,41 +60,10 @@ TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
     <param name="robot_description"
            command="$(find xacro)/xacro --inorder '$(find catvehicle)/urdf/catvehicle_2_lidars.xacro' roboname:='$(arg robot_name_1)' front_laser_points:='$(arg front_laser_points)' front_top_lidar_points:='$(arg front_top_lidar_points)' velodyne_points:='$(arg velodyne_points)' camera_right:='$(arg camera_right)' camera_left:='$(arg camera_left)'" />
 
-    <include file="$(find catvehicle)/launch/catvehicle.launch">
-      <arg name="robot_name" value="$(arg robot_name_1)"/>
-      <arg name="init_pose" value="-x -20 -y 1 -z 0"/>
-      <arg name="config_file" value="catvehicle_control.yaml"/>
-      <arg name="obstaclestopper_on" value="false"/>
-    </include>
-
-    <include file="$(find catvehicle)/launch/tfs_2_lidars.launch">
-      <arg name="robot_name" value="$(arg robot_name_1)"/>
-    </include>
-
-    <node pkg="rostopic" type="rostopic" name="inital_pose_pub" args="pub -1 /$(arg robot_name_1)/initialpose geometry_msgs/PoseWithCovarianceStamped '{header: {stamp: now, frame_id: $(arg robot_name_1)/map}, pose: {pose: {orientation: {w: 0.989527022142, x: 0.0, y: 0.0, z: 0.144347748342}, position: {x: 128.679428101, y: 121.831588745, z: 0.0}}}}'" output="screen"/>
+    <node name="urdf_spawner_$(arg robot_name_1)" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="$(arg init_pose) -urdf -model $(arg robot_name_1) -param robot_description"/>
 
   </group>
 
-  <group ns="$(arg robot_name_2)">
-
-    <param name="robot_description"
-           command="$(find xacro)/xacro --inorder '$(find catvehicle)/urdf/catvehicle_2_lidars.xacro' roboname:='$(arg robot_name_2)' front_laser_points:='$(arg front_laser_points)' front_top_lidar_points:='$(arg front_top_lidar_points)' velodyne_points:='$(arg velodyne_points)' camera_right:='$(arg camera_right)' camera_left:='$(arg camera_left)'" />
-
-    <include file="$(find catvehicle)/launch/catvehicle.launch">
-      <arg name="robot_name" value="$(arg robot_name_2)"/>
-      <arg name="init_pose" value="-x 10 -y -1 -z 0"/>
-      <arg name="config_file" value="catvehicle_control.yaml"/>
-      <arg name="obstaclestopper_on" value="false"/>
-    </include>
-
-    <include file="$(find catvehicle)/launch/tfs_2_lidars.launch">
-      <arg name="robot_name" value="$(arg robot_name_2)"/>
-    </include>
-
-    <node pkg="rostopic" type="rostopic" name="inital_pose_pub" args="pub -1 /$(arg robot_name_2)/initialpose geometry_msgs/PoseWithCovarianceStamped '{header: {stamp: now, frame_id: $(arg robot_name_2)/map}, pose: {pose: {orientation: {w: 0.992754252206, x: 0.0, y: 0.0, z: 0.120162368184}, position: {x: 158.679428101, y: 127.809555054, z: 0.0}}}}'" output="screen"/>
-
-  </group>
-
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+  <!--node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/-->
 
 </launch>

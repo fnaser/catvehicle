@@ -34,20 +34,29 @@ roslaunch catvehicle catvehicle_empty.launch
 
 <launch>
 
-<arg name="robot_name"/>
-<arg name="init_pose"/>
-<arg name="config_file"/>
-<arg name="obstaclestopper_on" default="true"/>
+<arg name="robot_name" default="catvehicle"/>
+<!--arg name="init_pose"/-->
+<arg name="config_file" default="catvehicle_control.yaml"/>
+<arg name="obstaclestopper_on" default="false"/>
+<arg name="use_sim_time" default="true"/>
 
 <param name="tf_prefix" value="$(arg robot_name)"/>
 
-<rosparam param="/use_sim_time">true</rosparam>
+<rosparam param="/use_sim_time">$(arg use_sim_time)</rosparam>
 <rosparam file="$(find catvehicle)/config/$(arg config_file)" command="load" ns="/$(arg robot_name)"/>
 
-<node name="urdf_spawner$(arg robot_name)" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="$(arg init_pose) -urdf -model $(arg robot_name) -param robot_description"/>
+<!--node name="urdf_spawner_$(arg robot_name)" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="$(arg init_pose) -urdf -model $(arg robot_name) -param robot_description"/-->
+
+<group ns="$(arg robot_name)">
 
 <!-- load the controllers -->
-<node name="controller_spawner$(arg robot_name)" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/$(arg robot_name)" required="true" args="joint1_velocity_controller joint2_velocity_controller front_left_steering_position_controller front_right_steering_position_controller  joint_state_controller"/>
+<node name="controller_spawner$(arg robot_name)" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/$(arg robot_name)" required="true" args="
+joint1_velocity_controller 
+joint2_velocity_controller 
+front_left_steering_position_controller 
+front_right_steering_position_controller 
+joint_state_controller"
+/>
 
 <!-- convert joint states to TF transforms for rviz, etc -->
 <node name="robot_state_publisher$(arg robot_name)" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
@@ -93,6 +102,8 @@ roslaunch catvehicle catvehicle_empty.launch
   <remap from="/catvehicle/distanceEstimator" to="/$(arg robot_name)/distanceEstimator" />
   <remap from="/catvehicle/cmd_vel_safe" to="/$(arg robot_name)/cmd_vel_safe" />
 </node>
+
+</group>
 
 </group>
 
